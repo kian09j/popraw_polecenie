@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Popraw polecenie</title>
+<meta name="description" content="Krótka gra o pisaniu poleceń dla AI. Dopisz to, czego AI brakuje, i zobacz, jak zmienia się odpowiedź. A short game about writing better prompts.">
+<!-- Link preview for LinkedIn and other social sites -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kian09j.github.io/popraw_polecenie/">
+<meta property="og:title" content="Popraw polecenie / Fix the prompt">
+<meta property="og:description" content="Dopisz do polecenia to, czego AI brakuje, i zobacz, jak zmienia się odpowiedź. 4 zadania, PL / EN.">
+<meta property="og:image" content="https://kian09j.github.io/popraw_polecenie/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Robot Bajtek i tytuł gry Popraw polecenie">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cpath d='M60 26V13' stroke='%2337352f' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='60' cy='10' r='8' fill='%23f5c84c' stroke='%2337352f' stroke-width='4'/%3E%3Crect x='10' y='26' width='100' height='84' rx='28' fill='%23ffffff' stroke='%2337352f' stroke-width='6'/%3E%3Crect x='24' y='42' width='72' height='52' rx='16' fill='%23f1f1ef' stroke='%2337352f' stroke-width='4'/%3E%3Cellipse cx='45' cy='66' rx='7' ry='10' fill='%2337352f'/%3E%3Cellipse cx='75' cy='66' rx='7' ry='10' fill='%2337352f'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #37352f;
+    --muted: #787774;
+    --faint: #9b9a97;
+    --line: #e9e9e7;
+    --hover: #f7f7f5;
+    --gray: #f1f1ef;
+    --blue: #2383e2;
+    --blue-hover: #0b6ec5;
+    --blue-bg: #e7f3f8;
+    --blue-text: #337ea9;
+    --green: #448361;
+    --green-bg: #dbeddb;
+    --red: #d44c47;
+    --red-bg: #fdebec;
+    --yellow-bg: #fbf3db;
+    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Helvetica, Arial, sans-serif, "Segoe UI Emoji", "Apple Color Emoji";
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 48px;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { width: 100%; max-width: 680px; }
+  a { color: var(--blue-text); }
+
+  /* Header */
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line);
+  }
+  .logo { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .logo .ai {
+    font-family: SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 85%;
+    color: #eb5757; background: rgba(135, 131, 120, 0.15); border-radius: 4px; padding: 1px 5px;
+  }
+  .lang { display: flex; gap: 2px; background: var(--gray); border-radius: 6px; padding: 2px; }
+  .lang button {
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--muted);
+    background: transparent; border: 0; border-radius: 4px; padding: 2px 10px; cursor: pointer;
+  }
+  .lang button[aria-pressed="true"] { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(15, 15, 15, 0.12); }
+  .lang button:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+  .stats { display: flex; gap: 6px; }
+  .pill {
+    font-size: 13px; font-weight: 500; color: var(--muted); background: var(--gray);
+    border-radius: 4px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  }
+  .pill.bump { animation: bump 0.4s ease; }
+  @keyframes bump { 50% { transform: scale(1.12); } }
+
+  /* Progress: one segment per task */
+  .trail { display: flex; gap: 4px; margin: 0 0 26px; }
+  .step { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+  .step.now { background: var(--blue); }
+  .step.ok { background: #6fbf8a; }
+  .step.part { background: #e9c46a; }
+  .step.no { background: #e8a5a1; }
+
+  .screen-in { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* Mascot */
+  .mascot { display: block; overflow: visible; transform-origin: 50% 100%; }
+  .mascot .eyes-open { transform-origin: 60px 56px; animation: blink 5s ease-in-out infinite; }
+  .mascot .eyes-happy, .mascot .m-big, .mascot .m-o { display: none; }
+  .mascot[data-mood="happy"] .eyes-open, .mascot[data-mood="happy"] .m-smile { display: none; }
+  .mascot[data-mood="happy"] .eyes-happy, .mascot[data-mood="happy"] .m-big { display: inline; }
+  .mascot[data-mood="happy"] { animation: hop 0.5s ease; }
+  .mascot[data-mood="oops"] .m-smile { display: none; }
+  .mascot[data-mood="oops"] .m-o { display: inline; }
+  .mascot[data-mood="oops"] { animation: shake 0.4s ease; }
+  .mascot .pupil { transition: transform 0.3s; }
+  .mascot[data-mood="think"] .pupil { transform: translate(2px, -2px); }
+  @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+  @keyframes hop { 50% { transform: translateY(-8px); } }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+  .guide { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .guide .mascot { width: 44px; height: 44px; flex: 0 0 44px; }
+  .bubble { flex: 1; background: var(--gray); border-radius: 6px; padding: 10px 14px; }
+  .bubble.ok { background: var(--green-bg); }
+  .bubble.part { background: var(--yellow-bg); }
+  .bubble.no { background: var(--red-bg); }
+  .bubble.pop { animation: fadeIn 0.25s ease; }
+
+  .round-tag {
+    display: inline-block; font-size: 12px; font-weight: 500; color: var(--blue-text); background: var(--blue-bg);
+    border-radius: 4px; padding: 1px 7px; margin-bottom: 8px;
+  }
+  .task { font-size: 20px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; margin: 2px 0 18px; }
+
+  /* Prompt and answer boxes */
+  .box-label {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted);
+    margin: 0 0 6px;
+  }
+  .prompt {
+    background: var(--gray); border-radius: 6px; padding: 12px 14px; margin-bottom: 18px;
+    font-size: 15px;
+  }
+  .pline { display: block; }
+  .pline.add {
+    margin-top: 6px; padding: 2px 0 2px 10px; border-left: 3px solid var(--c);
+    animation: fadeIn 0.2s ease;
+  }
+  .answer {
+    border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin-bottom: 22px;
+    box-shadow: 0 1px 2px rgba(15, 15, 15, 0.04); min-height: 80px;
+  }
+  .part { margin: 0 0 12px; }
+  .part:last-child { margin-bottom: 0; }
+  .ptext { white-space: pre-line; }
+  .part.changed .ptext {
+    background: var(--green-bg); border-radius: 3px; padding: 1px 2px;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .tag { font-size: 12px; font-weight: 500; border-radius: 4px; padding: 1px 7px; }
+  .tag.bad { background: var(--red-bg); color: var(--red); }
+  .tag.ok { background: var(--green-bg); color: var(--green); }
+  .tag.ok s { text-decoration-thickness: 1px; }
+  .typing { color: var(--muted); }
+  .typing .dot { display: inline-block; animation: dot 1s infinite; }
+  .typing .dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing .dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dot { 0%, 60%, 100% { opacity: 0.2; } 30% { opacity: 1; } }
+
+  /* Ingredient cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ing {
+    position: relative; width: 100%; font: inherit; font-size: 14px; text-align: left; color: var(--text);
+    background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(15, 15, 15, 0.04);
+    transition: background 0.12s, border-color 0.12s, opacity 0.2s;
+  }
+  .ing:hover:not(:disabled) { background: var(--hover); border-color: #dcdcd9; }
+  .ing:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .ing:disabled { cursor: default; }
+  .ing[aria-pressed="true"] { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); background: #f5fafd; }
+  .ing:disabled:not([aria-pressed="true"]):not(.v-missing) { opacity: 0.5; }
+  .ing-top { display: flex; align-items: center; gap: 6px; min-height: 20px; }
+  .cat { font-size: 12px; font-weight: 500; border-radius: 4px; padding: 1px 7px; }
+  .check {
+    margin-left: auto; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: #fff; background: var(--blue); visibility: hidden;
+  }
+  .ing[aria-pressed="true"] .check { visibility: visible; }
+  .verdict { margin-left: auto; font-size: 12px; font-weight: 500; border-radius: 4px; padding: 1px 7px; display: none; }
+  .revealed .verdict:not(:empty) { display: inline-block; }
+  .revealed .check { display: none; }
+  .ing.v-helped { border-color: #b9dcc0; box-shadow: inset 0 0 0 1px #b9dcc0; background: #f6fbf7; }
+  .ing.v-helped .verdict { background: var(--green-bg); color: var(--green); }
+  .ing.v-none .verdict { background: var(--gray); color: var(--muted); }
+  .ing.v-none { border-color: var(--line); box-shadow: none; background: #fff; }
+  .ing.v-missing { border: 1px dashed #8fc19f; }
+  .ing.v-missing .verdict { background: #fff; color: var(--green); box-shadow: inset 0 0 0 1px #b9dcc0; }
+  .ing.v-idle { opacity: 0.5; }
+
+  .send-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+  .counter { font-size: 14px; color: var(--muted); }
+
+  /* Lesson callout */
+  .lesson { margin-top: 22px; padding: 14px 16px; border-radius: 6px; background: var(--gray); animation: fadeIn 0.3s 0.1s both; }
+  .lesson h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .lesson p { margin: 0; }
+
+  /* Buttons */
+  .btn {
+    font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; border: 0; border-radius: 6px;
+    padding: 8px 16px; background: var(--blue); color: #fff; display: inline-flex; align-items: center;
+    justify-content: center; gap: 6px; transition: background 0.12s, opacity 0.12s;
+    box-shadow: inset 0 0 0 1px rgba(15, 15, 15, 0.1), 0 1px 2px rgba(15, 15, 15, 0.1);
+  }
+  .btn:hover:not(:disabled) { background: var(--blue-hover); }
+  .btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .actions { margin-top: 20px; display: flex; justify-content: flex-end; }
+
+  .footnote { margin: 32px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; color: var(--faint); }
+  .hidden { display: none !important; }
+
+  /* Start and end pages */
+  .hero { display: flex; flex-direction: column; align-items: flex-start; }
+  .hero .mascot { width: 76px; height: 76px; margin: 12px 0 10px; }
+  .hero .bubble { flex: none; width: 100%; margin: 0 0 8px; }
+  h1 { font-size: 38px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 14px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 28px 0 10px; }
+
+  .how { width: 100%; margin: 10px 0 18px; }
+  .how h2 { margin-top: 12px; }
+  .how ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+  .how li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; }
+  .how .num {
+    flex: 0 0 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    font-size: 14px; font-weight: 600;
+  }
+  .how strong { display: block; font-weight: 600; }
+  .how p { margin: 2px 0 0; color: var(--muted); }
+  .expect { width: 100%; background: var(--blue-bg); border-radius: 6px; padding: 12px 14px; margin: 0 0 22px; }
+  .expect strong { font-weight: 600; }
+  .expect p { margin: 2px 0 0; }
+  .series { margin: 26px 0 0; font-size: 14px; color: var(--muted); }
+
+  .score-blob b { font-size: 44px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+  .score-blob span { color: var(--muted); }
+  .score-msg { color: var(--muted); margin: 4px 0 4px; }
+  .rules { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 6px; }
+  .rules li {
+    display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 6px;
+    background: var(--note); animation: fadeIn 0.3s both; animation-delay: var(--delay);
+  }
+  .rules .num {
+    flex: 0 0 24px; height: 24px; border-radius: 50%; background: #fff; display: grid; place-items: center;
+    font-size: 13px; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(15, 15, 15, 0.1);
+  }
+  .rules strong { font-weight: 600; }
+  .callout { display: flex; gap: 10px; align-items: flex-start; border-radius: 6px; padding: 12px 14px; margin: 0 0 8px; }
+  .callout.less { border: 1px solid var(--line); }
+  .callout.bonus { background: var(--blue-bg); }
+  .callout .ico { font-size: 18px; line-height: 1.3; }
+  .callout strong { display: block; font-weight: 600; }
+  .end-actions { margin-top: 22px; }
+
+  @media (max-width: 560px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    body { padding-top: 16px; }
+    h1 { font-size: 30px; }
+    .task { font-size: 18px; }
+    .actions .btn { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo" id="logo">Popraw <span class="ai">polecenie</span></div>
+    <div class="lang" id="lang" role="group" aria-label="Język / Language">
+      <button type="button" data-lang="pl" aria-pressed="true">PL</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <div class="stats hidden" id="stats">
+      <div class="pill" id="progressText">1/4</div>
+      <div class="pill" id="scoreText"></div>
+    </div>
+  </header>
+  <div class="trail hidden" id="trail"></div>
+
+  <main id="screen"></main>
+  <p class="footnote hidden" id="footnote"></p>
+</div>
+
+<script>
+/*
+  How a task works: the AI's answer is built from parts. Each part lists the cards it depends on
+  (deps) and has one text per combination of those cards that the player picked (t). Keys are the
+  picked deps in alphabetical order joined with "+", and "" is the answer to the bare prompt.
+  An empty text means the part disappears. probs are the problems shown in red; each is fixed by one card.
+  Cards whose key never appears in probs are the tempting ones that change nothing.
+*/
+
+const CATS = {
+  facts:    { pl: "Fakty",    en: "Facts",    c: "#fadec9" },
+  audience: { pl: "Odbiorca", en: "Audience", c: "#d3e5ef" },
+  goal:     { pl: "Cel",      en: "Goal",     c: "#dbeddb" },
+  format:   { pl: "Format",   en: "Format",   c: "#e8deee" },
+  example:  { pl: "Przykład", en: "Example",  c: "#fbf3db" },
+  source:   { pl: "Źródło",   en: "Source",   c: "#fdebec" },
+  rules:    { pl: "Zasady",   en: "Rules",    c: "#e3e2e0" },
+  role:     { pl: "Rola",     en: "Role",     c: "#eee0da" },
+  request:  { pl: "Prośba",   en: "Request",  c: "#f5e0e9" },
+  tone:     { pl: "Ton",      en: "Tone",     c: "#e7f3f8" }
+};
+
+const ROUNDS_PL = [
+  {
+    task: "Dostawa dla klienta się opóźni. Szefowa prosi: „Napisz do nich szybko maila”.",
+    base: "Napisz maila do klienta o opóźnieniu dostawy.",
+    cards: [
+      { k: "fakty", cat: "facts", text: "Chodzi o zamówienie nr 4521 dla firmy Nordtex. Dostawa przesuwa się z 12 na 19 maja, bo czekamy na jedną część od dostawcy." },
+      { k: "odbiorca", cat: "audience", text: "Piszę do pana Marka, kierownika zakupów. Współpracujemy od lat." },
+      { k: "format", cat: "format", text: "Maksymalnie 4 zdania. Na końcu zaproponuj krótką rozmowę." },
+      { k: "rola", cat: "role", text: "Jesteś światowej klasy copywriterem." },
+      { k: "prosba", cat: "request", text: "To bardzo ważne, postaraj się!" },
+      { k: "ton", cat: "tone", text: "Pisz profesjonalnie." }
+    ],
+    parts: [
+      { deps: ["odbiorca"], t: { "": "Szanowni Państwo,", "odbiorca": "Dzień dobry Panie Marku," },
+        probs: [{ fix: "odbiorca", label: "Bezosobowo, a znacie się od lat" }] },
+      { deps: ["fakty", "odbiorca"], t: {
+          "": "Z przykrością informujemy, że realizacja Państwa zamówienia [numer zamówienia] ulegnie opóźnieniu. Nowy termin dostawy to [data].",
+          "fakty": "Z przykrością informujemy, że zamówienie nr 4521 dotrze 19 maja zamiast 12 maja. Czekamy jeszcze na jedną część od naszego dostawcy.",
+          "odbiorca": "Niestety muszę przekazać, że Pana zamówienie [numer zamówienia] się opóźni. Nowy termin dostawy to [data].",
+          "fakty+odbiorca": "Niestety zamówienie nr 4521 dotrze 19 maja zamiast 12 maja. Czekamy jeszcze na jedną część od naszego dostawcy." },
+        probs: [{ fix: "fakty", label: "Puste pola zamiast faktów" }] },
+      { deps: ["format", "odbiorca"], t: {
+          "": "Pragniemy zapewnić, że satysfakcja Klienta jest dla nas najwyższym priorytetem, a nasz zespół dokłada wszelkich starań, aby sprostać Państwa oczekiwaniom. Doceniamy Państwa cierpliwość i zrozumienie w tej wyjątkowo trudnej sytuacji. Jesteśmy przekonani, że nasza dalsza współpraca będzie przebiegać owocnie.",
+          "format": "",
+          "odbiorca": "Chcę zapewnić, że robimy wszystko, aby sprostać Pana oczekiwaniom. Bardzo doceniam Pana cierpliwość i zrozumienie w tej trudnej sytuacji. Jestem przekonana, że nasza dalsza współpraca będzie przebiegać równie owocnie.",
+          "format+odbiorca": "" },
+        probs: [{ fix: "format", label: "Lanie wody" }] },
+      { deps: ["format", "odbiorca"], t: {
+          "": "W razie jakichkolwiek pytań pozostajemy do Państwa dyspozycji.\nZ wyrazami szacunku\nZespół Obsługi Klienta",
+          "format": "Czy możemy jutro krótko porozmawiać o nowym terminie?\nZ wyrazami szacunku\nZespół Obsługi Klienta",
+          "odbiorca": "W razie pytań jestem do dyspozycji.\nPozdrawiam serdecznie\nOla",
+          "format+odbiorca": "Czy możemy jutro krótko porozmawiać o nowym terminie?\nPozdrawiam serdecznie\nOla" } }
+    ],
+    lesson: "Fakty wypełniają puste pola, odbiorca ustawia ton, a format długość. „Jesteś światowej klasy copywriterem” i „postaraj się” nie dają AI ani jednej nowej informacji, więc niczego tu nie poprawiają."
+  },
+  {
+    task: "Po godzinnym spotkaniu masz chaotyczne notatki. Kierownik, którego nie było na spotkaniu, prosi o podsumowanie.",
+    base: "Podsumuj te notatki ze spotkania: [wklejone notatki]",
+    cards: [
+      { k: "cel", cat: "goal", text: "Interesują mnie tylko decyzje i kolejne kroki." },
+      { k: "format", cat: "format", text: "Wypunktuj: co ustalono, kto odpowiada, do kiedy." },
+      { k: "odbiorca", cat: "audience", text: "Czyta to kierownik, którego nie było na spotkaniu. Nie zna skrótów z projektu." },
+      { k: "rola", cat: "role", text: "Jesteś doświadczonym project managerem." },
+      { k: "prosba", cat: "request", text: "Zrób to dokładnie i bez błędów." },
+      { k: "zasady", cat: "rules", text: "Nie pomiń niczego ważnego." }
+    ],
+    parts: [
+      { deps: ["cel", "format"], t: {
+          "": "Na początku rozmawialiśmy o weekendzie i o nowym ekspresie do kawy.",
+          "cel": "",
+          "format": "• Na początek: weekend i nowy ekspres do kawy",
+          "cel+format": "" },
+        probs: [{ fix: "cel", label: "Czy to kogoś obchodzi?" }] },
+      { deps: ["format", "odbiorca"], t: {
+          "": "Kasia omówiła status MVP i blokery po stronie BE. Tomek zaproponował przesunięcie go-live, a Ola zajmie się komunikacją z klientem. Wróciliśmy też do budżetu, ale bez konkluzji.",
+          "format": "• MVP: Kasia omówiła status i blokery po stronie BE\n• Go-live: przesuwamy (propozycja Tomka)\n• Komunikacja z klientem: Ola\n• Budżet: bez decyzji\nTerminy: nie padły na spotkaniu.",
+          "odbiorca": "Kasia opisała, na jakim etapie jest pierwsza wersja aplikacji i jakie problemy blokują prace nad serwerem. Tomek zaproponował przesunięcie startu aplikacji, a Ola przekaże tę informację klientowi. Wróciliśmy też do budżetu, ale bez decyzji.",
+          "format+odbiorca": "• Start pierwszej wersji aplikacji przesuwamy (propozycja Tomka)\n• Problemy z serwerem, które blokują prace: wyjaśnia Kasia\n• Informacja dla klienta: Ola\n• Budżet: bez decyzji\nTerminy: nie padły na spotkaniu, warto je ustalić." },
+        probs: [
+          { fix: "format", label: "Ściana tekstu: kto, co, do kiedy?" },
+          { fix: "odbiorca", label: "MVP, BE, go-live? Kierownik nie zna tych skrótów" }
+        ] }
+    ],
+    lesson: "Cel mówi AI, czego szukać. Format mówi, jak to pokazać. Odbiorca mówi, jakim językiem pisać. „Zrób to dokładnie” brzmi dobrze, ale nie daje AI żadnej konkretnej wskazówki."
+  },
+  {
+    task: "Od czerwca w firmie zmieniają się zasady urlopów. Masz napisać o tym post na intranet.",
+    base: "Napisz post na intranet o nowych zasadach urlopów.",
+    cards: [
+      { k: "zrodlo", cat: "source", text: "Opieraj się wyłącznie na załączonym pliku „Regulamin urlopów 2026”." },
+      { k: "przyklad", cat: "example", text: "Wzór naszego stylu: „🚲 Nowość: parking dla rowerów! Od poniedziałku możecie…”" },
+      { k: "cel", cat: "goal", text: "Chodzi o to, żeby każdy do 31 maja wpisał w HRnet plan urlopu na lato." },
+      { k: "rola", cat: "role", text: "Jesteś specjalistą ds. komunikacji wewnętrznej." },
+      { k: "prosba", cat: "request", text: "Upewnij się, że wszystko się zgadza." },
+      { k: "napiwek", cat: "request", text: "Dam Ci 100 zł napiwku za świetny tekst." }
+    ],
+    parts: [
+      { deps: ["przyklad"], t: { "": "Komunikat w sprawie zmian w zasadach udzielania urlopów wypoczynkowych", "przyklad": "🌴 Nowość: urlopy planujemy online!" },
+        probs: [{ fix: "przyklad", label: "Brzmi jak pismo z urzędu" }] },
+      { deps: ["przyklad", "zrodlo"], t: {
+          "": "Uprzejmie informujemy, że od 1 lipca każdy pracownik otrzyma 2 dodatkowe dni urlopu, a wniosek będzie można złożyć najpóźniej 3 dni przed planowanym wolnym.",
+          "przyklad": "Od 1 lipca każdy z Was dostaje 2 dodatkowe dni urlopu! A wniosek złożycie nawet 3 dni przed wolnym.",
+          "zrodlo": "Uprzejmie informujemy, że od 1 czerwca wnioski urlopowe składa się w systemie HRnet zamiast w formie papierowej. Wniosek należy złożyć co najmniej 7 dni przed planowanym urlopem.",
+          "przyklad+zrodlo": "Od 1 czerwca wnioski urlopowe składacie w HRnet, a nie na papierze. Pamiętajcie tylko: co najmniej 7 dni przed urlopem." },
+        probs: [{ fix: "zrodlo", label: "Skąd te liczby? W regulaminie ich nie ma" }] },
+      { deps: ["cel", "przyklad"], t: {
+          "": "Szczegółowych informacji udziela Dział Kadr.",
+          "cel": "Uprzejmie prosimy o wprowadzenie planu urlopu na okres letni w systemie HRnet do 31 maja.",
+          "przyklad": "Pytania? Piszcie śmiało do działu kadr 🙂",
+          "cel+przyklad": "👉 Do 31 maja wpiszcie w HRnet swój plan urlopu na lato. To zajmie 5 minut!\nPytania? Piszcie śmiało do działu kadr 🙂" },
+        probs: [{ fix: "cel", label: "I co mam teraz zrobić?" }] },
+      { deps: ["przyklad"], t: { "": "Z poważaniem\nDział Kadr i Płac", "przyklad": "" } }
+    ],
+    lesson: "Bez źródła AI zgaduje, a zgadnięte liczby brzmią bardzo pewnie. Tych 2 dodatkowych dni urlopu nie ma w regulaminie! Prośba „upewnij się, że wszystko się zgadza” nie pomoże, bo AI nie ma z czym tego porównać. Daj mu dokument, a styl pokaż na przykładzie."
+  },
+  {
+    task: "Twój zespół szuka nowej osoby do obsługi klienta. Masz przygotować ogłoszenie o pracę.",
+    base: "Napisz ogłoszenie o pracę: specjalista ds. obsługi klienta.",
+    cards: [
+      { k: "fakty", cat: "facts", text: "Pensja: 7000 do 8500 zł brutto. Praca hybrydowa, 2 dni w tygodniu w biurze w Krakowie. Klienci piszą po polsku i angielsku." },
+      { k: "zasady", cat: "rules", text: "Pisz neutralnie: nic o wieku i płci, „osoba” zamiast „kandydat”." },
+      { k: "format", cat: "format", text: "Najwyżej 4 wymagania, tylko te naprawdę potrzebne." },
+      { k: "rola", cat: "role", text: "Jesteś najlepszym rekruterem w Polsce." },
+      { k: "prosba", cat: "request", text: "Ogłoszenie musi naprawdę przyciągać!" },
+      { k: "ton", cat: "tone", text: "Napisz to nowocześnie." }
+    ],
+    parts: [
+      { deps: ["zasady"], t: { "": "Specjalista ds. obsługi klienta", "zasady": "Specjalista / Specjalistka ds. obsługi klienta" } },
+      { deps: ["zasady"], t: {
+          "": "Dołącz do naszego młodego, dynamicznego zespołu! Szukamy energicznego kandydata, który odnajdzie się w szybkim tempie pracy.",
+          "zasady": "Dołącz do zespołu, który codziennie pomaga klientom. Szukamy osoby, która lubi rozmawiać z ludźmi i rozwiązywać ich problemy." },
+        probs: [{ fix: "zasady", label: "„Młody zespół” i „kandydat” zniechęcają część osób" }] },
+      { deps: ["fakty"], t: {
+          "": "Oferujemy: atrakcyjne wynagrodzenie, elastyczny model pracy i świetną atmosferę.",
+          "fakty": "Oferujemy: 7000 do 8500 zł brutto miesięcznie i pracę hybrydową (2 dni w tygodniu w biurze w Krakowie)." },
+        probs: [{ fix: "fakty", label: "Ile? Gdzie? Same ogólniki" }] },
+      { deps: ["format"], t: {
+          "": "Wymagania: min. 5 lat doświadczenia, wyższe wykształcenie, angielski C1, niemiecki mile widziany, znajomość systemów CRM, Excel na poziomie zaawansowanym, prawo jazdy kat. B, odporność na stres, samodzielność, kreatywność.",
+          "format": "Czego szukamy: doświadczenia w pracy z klientem, swobodnego angielskiego, cierpliwości i dobrej organizacji pracy." },
+        probs: [{ fix: "format", label: "10 wymagań. Kto się zgłosi?" }] }
+    ],
+    lesson: "AI powtarza schematy z tysięcy ogłoszeń, także te złe: „młody zespół”, „atrakcyjne wynagrodzenie” i listę 10 wymagań. Jeśli chcesz inaczej, napisz to wprost i podaj konkrety."
+  }
+];
+
+const ROUNDS_EN = [
+  {
+    task: "A customer's delivery will be late. Your manager asks: “Can you email them quickly?”",
+    base: "Write an email to a customer about a delayed delivery.",
+    cards: [
+      { k: "facts", cat: "facts", text: "It's order #4521 for Nordtex. Delivery moves from May 12 to May 19 because we're waiting for one part from our supplier." },
+      { k: "audience", cat: "audience", text: "I'm writing to Mark, their purchasing manager. We've worked together for years." },
+      { k: "format", cat: "format", text: "4 sentences max. End by suggesting a quick call." },
+      { k: "role", cat: "role", text: "You are a world-class copywriter." },
+      { k: "request", cat: "request", text: "This is really important, do your best!" },
+      { k: "tone", cat: "tone", text: "Write professionally." }
+    ],
+    parts: [
+      { deps: ["audience"], t: { "": "Dear Sir or Madam,", "audience": "Hi Mark," },
+        probs: [{ fix: "audience", label: "So impersonal, and you've known him for years" }] },
+      { deps: ["audience", "facts"], t: {
+          "": "We regret to inform you that your order [order number] has been delayed. The new delivery date is [date].",
+          "audience": "I'm sorry to let you know that your order [order number] has been delayed. The new delivery date is [date].",
+          "facts": "We regret to inform you that order #4521 will arrive on May 19 instead of May 12. We're still waiting for one part from our supplier.",
+          "audience+facts": "I'm sorry, but order #4521 will arrive on May 19 instead of May 12. We're still waiting for one part from our supplier." },
+        probs: [{ fix: "facts", label: "Blanks instead of facts" }] },
+      { deps: ["audience", "format"], t: {
+          "": "Please be assured that customer satisfaction remains our highest priority and that our team is making every effort to meet your expectations. We truly appreciate your patience and understanding in this exceptionally challenging situation. We are confident that our partnership will continue to flourish.",
+          "audience": "I want to assure you that we're doing everything we can to meet your expectations. I really appreciate your patience and understanding in this difficult situation. I'm confident our partnership will continue to flourish.",
+          "format": "",
+          "audience+format": "" },
+        probs: [{ fix: "format", label: "Waffle" }] },
+      { deps: ["audience", "format"], t: {
+          "": "Should you have any questions, please do not hesitate to contact us.\nKind regards,\nCustomer Service Team",
+          "audience": "Let me know if you have any questions.\nBest,\nOlivia",
+          "format": "Could we have a quick call tomorrow about the new date?\nKind regards,\nCustomer Service Team",
+          "audience+format": "Could we have a quick call tomorrow about the new date?\nBest,\nOlivia" } }
+    ],
+    lesson: "Facts fill in the blanks, the audience sets the tone, and the format sets the length. “You are a world-class copywriter” and “do your best” don't give the AI a single new piece of information, so they don't fix anything here."
+  },
+  {
+    task: "After an hour-long meeting you have messy notes. Your manager, who wasn't there, asks for a summary.",
+    base: "Summarize these meeting notes: [pasted notes]",
+    cards: [
+      { k: "goal", cat: "goal", text: "I only care about decisions and next steps." },
+      { k: "format", cat: "format", text: "Use bullet points: what was decided, who owns it, by when." },
+      { k: "audience", cat: "audience", text: "It's for my manager, who wasn't at the meeting and doesn't know the project's abbreviations." },
+      { k: "role", cat: "role", text: "You are an experienced project manager." },
+      { k: "request", cat: "request", text: "Be thorough and don't make mistakes." },
+      { k: "rules", cat: "rules", text: "Don't leave out anything important." }
+    ],
+    parts: [
+      { deps: ["format", "goal"], t: {
+          "": "We started by chatting about the weekend and the new coffee machine.",
+          "format": "• Warm-up: the weekend and the new coffee machine",
+          "goal": "",
+          "format+goal": "" },
+        probs: [{ fix: "goal", label: "Does anyone care?" }] },
+      { deps: ["audience", "format"], t: {
+          "": "Kate went through the MVP status and the BE blockers. Tom suggested pushing the go-live, and Emma will handle comms with the client. We also came back to the budget, but with no conclusion.",
+          "audience": "Kate explained where the first version of the app stands and which problems are holding up the server work. Tom suggested moving the app's launch date, and Emma will let the client know. We also came back to the budget, but nothing was decided.",
+          "format": "• MVP: Kate covered status and BE blockers\n• Go-live: pushed back (Tom's suggestion)\n• Client comms: Emma\n• Budget: no decision\nDeadlines: none were set in the meeting.",
+          "audience+format": "• The first version of the app will launch later (Tom's suggestion)\n• Server problems holding up the work: Kate is looking into it\n• Letting the client know: Emma\n• Budget: no decision\nDeadlines: none were set in the meeting, worth agreeing on." },
+        probs: [
+          { fix: "format", label: "Wall of text: who, what, by when?" },
+          { fix: "audience", label: "MVP, BE, go-live? Your manager won't know these" }
+        ] }
+    ],
+    lesson: "The goal tells the AI what to look for. The format tells it how to show it. The audience tells it what language to use. “Be thorough” sounds good, but it doesn't tell the AI anything specific."
+  },
+  {
+    task: "From June, your company is changing its holiday rules. You need to write an intranet post about it.",
+    base: "Write an intranet post about the new holiday rules.",
+    cards: [
+      { k: "source", cat: "source", text: "Use only the attached file “Holiday Policy 2026”." },
+      { k: "example", cat: "example", text: "An example of our style: “🚲 New: bike parking! From Monday you can…”" },
+      { k: "goal", cat: "goal", text: "The goal: everyone enters their summer holiday plan in HRnet by May 31." },
+      { k: "role", cat: "role", text: "You are an internal communications specialist." },
+      { k: "request", cat: "request", text: "Make sure everything is correct." },
+      { k: "tip", cat: "request", text: "I'll tip you $100 for a great post." }
+    ],
+    parts: [
+      { deps: ["example"], t: { "": "Notice Regarding Amendments to the Annual Leave Policy", "example": "🌴 New: plan your holidays online!" },
+        probs: [{ fix: "example", label: "Reads like a letter from the tax office" }] },
+      { deps: ["example", "source"], t: {
+          "": "Please be advised that from July 1, every employee will receive 2 additional days of annual leave, and requests may be submitted up to 3 days before the planned time off.",
+          "example": "From July 1, you all get 2 extra days off! And you can request leave as little as 3 days ahead.",
+          "source": "Please be advised that from June 1, leave requests are to be submitted in the HRnet system instead of on paper. Requests must be submitted at least 7 days before the planned leave.",
+          "example+source": "From June 1, you request leave in HRnet, not on paper. Just remember: at least 7 days before your time off." },
+        probs: [{ fix: "source", label: "Where are these numbers from? They're not in the policy" }] },
+      { deps: ["example", "goal"], t: {
+          "": "Further details are available from the HR Department.",
+          "example": "Questions? Just drop HR a message 🙂",
+          "goal": "Employees are kindly requested to enter their summer leave plans in HRnet by May 31.",
+          "example+goal": "👉 Enter your summer holiday plan in HRnet by May 31. It takes 5 minutes!\nQuestions? Just drop HR a message 🙂" },
+        probs: [{ fix: "goal", label: "So what do I do now?" }] },
+      { deps: ["example"], t: { "": "Yours faithfully,\nHuman Resources Department", "example": "" } }
+    ],
+    lesson: "Without a source, the AI guesses, and guessed numbers sound very confident. Those 2 extra days off aren't in the policy! Asking it to “make sure everything is correct” won't help, because the AI has nothing to check against. Give it the document, and show the style with an example."
+  },
+  {
+    task: "Your team is hiring someone for customer support. You need to write the job ad.",
+    base: "Write a job ad: customer support specialist.",
+    cards: [
+      { k: "facts", cat: "facts", text: "Salary: PLN 7,000 to 8,500 gross a month. Hybrid: 2 days a week in our Kraków office. Customers write in Polish and English." },
+      { k: "rules", cat: "rules", text: "Use inclusive language: nothing about age or gender." },
+      { k: "format", cat: "format", text: "4 requirements max, only the ones that really matter." },
+      { k: "role", cat: "role", text: "You are the best recruiter in the country." },
+      { k: "request", cat: "request", text: "The ad has to be really attractive!" },
+      { k: "tone", cat: "tone", text: "Make it sound modern." }
+    ],
+    parts: [
+      { deps: [], t: { "": "Customer Support Specialist" } },
+      { deps: ["rules"], t: {
+          "": "Join our young, dynamic team! We're looking for an energetic digital native who thrives in a fast-paced, work-hard-play-hard environment.",
+          "rules": "Join a team that helps customers every day. We're looking for someone who enjoys talking to people and solving their problems." },
+        probs: [{ fix: "rules", label: "“Young team” and “digital native” put many people off" }] },
+      { deps: ["facts"], t: {
+          "": "We offer: a competitive salary, flexible working and a great atmosphere.",
+          "facts": "We offer: PLN 7,000 to 8,500 gross a month and hybrid work (2 days a week in our Kraków office)." },
+        probs: [{ fix: "facts", label: "How much? Where? Just buzzwords" }] },
+      { deps: ["format"], t: {
+          "": "Requirements: 5+ years of experience, a university degree, C1 English, German a plus, CRM experience, advanced Excel, a driving licence, stress resistance, independence, creativity.",
+          "format": "What we're looking for: experience working with customers, fluent English, patience and good organisation." },
+        probs: [{ fix: "format", label: "10 requirements. Who's going to apply?" }] }
+    ],
+    lesson: "AI repeats patterns from thousands of job ads, including the bad ones: “young, dynamic team”, “competitive salary” and a list of 10 requirements. If you want something different, say so directly and give it the facts."
+  }
+];
+
+const RULES_PL = [
+  ["Fakty", "liczby, daty, nazwy. AI ich nie zna, dopóki ich nie podasz."],
+  ["Odbiorca i cel", "kto to przeczyta i co ma potem zrobić."],
+  ["Format", "długość, punkty, struktura."],
+  ["Źródło i przykład", "dokument z faktami i wzór stylu."],
+  ["Zasady wprost", "czego unikać, na przykład stereotypów."]
+];
+
+const RULES_EN = [
+  ["Facts", "numbers, dates, names. The AI doesn't know them until you tell it."],
+  ["Audience and goal", "who will read it and what they should do next."],
+  ["Format", "length, bullet points, structure."],
+  ["Source and example", "a document with the facts and a sample of the style."],
+  ["Explicit rules", "what to avoid, such as stereotypes."]
+];
+
+function starsWordPl(n) {
+  if (n === 1) return "gwiazdka";
+  const last = n % 10, lastTwo = n % 100;
+  return last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? "gwiazdki" : "gwiazdek";
+}
+
+const TEXT = {
+  pl: {
+    title: "Popraw polecenie",
+    logo: 'Popraw <span class="ai">polecenie</span>',
+    hello: "Cześć, to znowu ja, Bajtek! Tym razem to Ty piszesz polecenia dla AI.",
+    howTitle: "Dobre polecenie to nie zaklęcie",
+    how: [
+      ["Zobacz, co napisało AI", "Dostajesz zadanie z pracy, krótkie polecenie i odpowiedź AI. Na czerwono zaznaczyliśmy, co jest nie tak."],
+      ["Dopisz do polecenia najwyżej 3 rzeczy", "Masz 6 kart: fakty, odbiorca, format, rola i inne. Nie wszystkie pomagają. Wybierz te, które naprawią problemy."],
+      ["Wyślij i sprawdź", "AI pisze odpowiedź od nowa. Zobaczysz, które problemy udało się naprawić, a których nie."]
+    ],
+    expectTitle: "Czego się spodziewać?",
+    expect: "4 zadania z pracy biurowej, około 5 minut. Za każdy naprawiony problem dostajesz gwiazdkę.",
+    start: "Zaczynamy",
+    think: "Co jest nie tak z tą odpowiedzią? Wybierz, co dopisać do polecenia.",
+    writingBubble: "Wysłane! Zobaczmy, co teraz napisze AI…",
+    round: "Zadanie",
+    promptLabel: "Twoje polecenie",
+    answerLabel: "Odpowiedź AI",
+    addLabel: "Dopisz do polecenia",
+    counter: (n, m) => `Wybrano ${n} z ${m}`,
+    send: "Wyślij do AI",
+    writing: "AI pisze",
+    all: (n) => `Wszystkie problemy naprawione: ${n} z ${n}!`,
+    some: (n, t) => `Naprawione: ${n} z ${t}. Zobacz, czego zabrakło.`,
+    none: "Nic się nie poprawiło. AI dalej nie ma informacji, których potrzebuje.",
+    helped: "Pomogło",
+    noEffect: "Bez efektu",
+    missing: "Tego zabrakło",
+    removed: "Usunięte",
+    lesson: "Lekcja",
+    next: "Dalej",
+    result: "Zobacz wynik",
+    points: "Gwiazdki",
+    stars: starsWordPl,
+    msgs: [
+      "Perfekcyjnie! Piszesz polecenia jak zawodowiec.",
+      "Świetnie! Wiesz, czego AI potrzebuje.",
+      "Nieźle! Kilka informacji jeszcze umknęło.",
+      "Teraz już wiesz, czego AI potrzebuje. Zagraj jeszcze raz!"
+    ],
+    endTitle: "Przepis na dobre polecenie",
+    lessTitle: "Pomaga mniej, niż się wydaje",
+    lessText: "Role („jesteś najlepszym copywriterem”), napiwki i „postaraj się”. Nie dają AI informacji, których mu brakuje.",
+    bonusTitle: "Nie wiesz, co dopisać?",
+    bonusText: "Napisz na końcu polecenia: „Zanim zaczniesz, zadaj mi pytania”. AI samo zapyta o to, czego mu brakuje.",
+    again: "Zagraj jeszcze raz",
+    series: "Z tej samej serii:",
+    otherGame: "Myśl jak AI",
+    footnote: "Odpowiedzi AI są przykładowe, napisane ręcznie, żeby pokazać zasadę działania."
+  },
+  en: {
+    title: "Fix the prompt",
+    logo: 'Fix the <span class="ai">prompt</span>',
+    hello: "Hi, it's me again, Bajtek! This time you write the prompts for the AI.",
+    howTitle: "A good prompt isn't a magic spell",
+    how: [
+      ["See what the AI wrote", "You get a work task, a short prompt and the AI's answer. We've marked what's wrong in red."],
+      ["Add up to 3 things to the prompt", "You have 6 cards: facts, audience, format, role and more. Not all of them help. Pick the ones that fix the problems."],
+      ["Send it and check", "The AI writes its answer again. You'll see which problems got fixed and which didn't."]
+    ],
+    expectTitle: "What to expect",
+    expect: "4 everyday office tasks, about 5 minutes. You get a star for every problem you fix.",
+    start: "Let's go",
+    think: "What's wrong with this answer? Pick what to add to the prompt.",
+    writingBubble: "Sent! Let's see what the AI writes now…",
+    round: "Task",
+    promptLabel: "Your prompt",
+    answerLabel: "AI's answer",
+    addLabel: "Add to your prompt",
+    counter: (n, m) => `${n} of ${m} picked`,
+    send: "Send to AI",
+    writing: "AI is writing",
+    all: (n) => `All problems fixed: ${n} of ${n}!`,
+    some: (n, t) => `Fixed: ${n} of ${t}. See what was missing.`,
+    none: "Nothing got better. The AI still doesn't have the information it needs.",
+    helped: "Helped",
+    noEffect: "No effect",
+    missing: "Was missing",
+    removed: "Removed",
+    lesson: "Lesson",
+    next: "Next",
+    result: "See your score",
+    points: "Stars",
+    stars: (n) => (n === 1 ? "star" : "stars"),
+    msgs: [
+      "Perfect! You write prompts like a pro.",
+      "Great! You know what the AI needs.",
+      "Not bad! A few details slipped through.",
+      "Now you know what the AI needs. Try again!"
+    ],
+    endTitle: "The recipe for a good prompt",
+    lessTitle: "Helps less than you'd think",
+    lessText: "Roles (“you are the best copywriter”), tips and “do your best”. They don't give the AI the information it's missing.",
+    bonusTitle: "Not sure what to add?",
+    bonusText: "End your prompt with: “Before you start, ask me questions.” The AI will ask for whatever it's missing.",
+    again: "Play again",
+    series: "Also in this series:",
+    otherGame: "Think like AI",
+    footnote: "The AI answers are examples, written by hand to show how it works."
+  }
+};
+
+const OTHER_GAME_URL = "https://kian09j.github.io/mysl_jak_ai/";
+const MAX_PICKS = 3;
+const HOW_COLORS = ["#fadec9", "#d3e5ef", "#e8deee"];
+const NOTE_COLORS = ["#fbf3db", "#edf3ec", "#e7f3f8", "#f6f3f9", "#faf1f5"];
+const ICONS = { star: "⭐", bulb: "💡", arrow: "→", warn: "⚠", prompt: "✏️", ai: "🤖", plus: "＋", stop: "🪄", ask: "❓" };
+
+// Set by setLang(): the active language's tasks, rules and UI text.
+let ROUNDS = ROUNDS_PL, RULES = RULES_PL, T = TEXT.pl;
+let lang = "pl";
+
+// Bajtek, the little robot guide from "Myśl jak AI". Mood: idle, think, happy, oops.
+function mascot(mood = "idle") {
+  const ink = "#37352f";
+  return `
+  <svg class="mascot" data-mood="${mood}" viewBox="0 0 120 120" aria-hidden="true">
+    <g class="body" fill="none" stroke="${ink}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M35 99C27 99 24 95 23 90"/>
+      <path d="M85 99C93 99 96 95 97 90"/>
+      <rect x="34" y="88" width="52" height="26" rx="11" fill="#fff"/>
+      <path d="M60 108c-5-3.4-7.6-6-7.6-8.6a3.6 3.6 0 0 1 7.6-1.6a3.6 3.6 0 0 1 7.6 1.6c0 2.6-2.6 5.2-7.6 8.6z" fill="#e16259" stroke-width="2.5"/>
+      <path d="M60 26V14"/>
+      <circle cx="60" cy="9" r="5.5" fill="#f5c84c"/>
+      <rect x="8" y="46" width="11" height="20" rx="5" fill="#fff"/>
+      <rect x="101" y="46" width="11" height="20" rx="5" fill="#fff"/>
+      <rect x="16" y="24" width="88" height="64" rx="24" fill="#fff"/>
+      <rect x="28" y="37" width="64" height="40" rx="14" fill="#f1f1ef" stroke-width="2.5"/>
+    </g>
+    <g class="eyes-open">
+      <ellipse cx="47" cy="56" rx="5" ry="6.5" fill="${ink}"/>
+      <ellipse cx="73" cy="56" rx="5" ry="6.5" fill="${ink}"/>
+      <g class="pupil"><circle cx="48.6" cy="53.6" r="1.7" fill="#fff"/><circle cx="74.6" cy="53.6" r="1.7" fill="#fff"/></g>
+    </g>
+    <g class="eyes-happy" fill="none" stroke="${ink}" stroke-width="3.5" stroke-linecap="round">
+      <path d="M41.5 58q5.5-8 11 0"/><path d="M67.5 58q5.5-8 11 0"/>
+    </g>
+    <circle cx="37" cy="66" r="3.5" fill="#f5c0c0"/>
+    <circle cx="83" cy="66" r="3.5" fill="#f5c0c0"/>
+    <path class="m-smile" d="M55 66q5 4.5 10 0" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
+    <path class="m-big" d="M53.5 64.5q6.5 9 13 0z" fill="${ink}"/>
+    <ellipse class="m-o" cx="60" cy="68" rx="3.5" ry="4" fill="${ink}"/>
+  </svg>`;
+}
+
+const $ = (id) => document.getElementById(id);
+const screen = $("screen");
+let current = 0;
+let score = 0;
+let results = [];   // per task: { fixed, total }
+let view = "start";
+let picked = [];    // card keys, in the order the player added them
+let order = [];     // this task's cards, shuffled once
+let sent = false;
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// The text a part shows for a given set of picked cards.
+function variant(part, set) {
+  return part.t[part.deps.filter((k) => set.has(k)).sort().join("+")];
+}
+const problemsOf = (r) => r.parts.flatMap((p) => p.probs || []);
+const usefulKeys = (r) => new Set(problemsOf(r).map((q) => q.fix));
+const maxStars = () => ROUNDS.reduce((s, r) => s + problemsOf(r).length, 0);
+
+function setScreen(html) {
+  screen.classList.remove("screen-in");
+  screen.innerHTML = html;
+  void screen.offsetWidth;
+  screen.classList.add("screen-in");
+}
+
+function setChrome(inGame) {
+  $("stats").classList.toggle("hidden", !inGame);
+  $("trail").classList.toggle("hidden", !inGame);
+  $("footnote").classList.toggle("hidden", !inGame);
+  $("lang").classList.toggle("hidden", inGame);
+}
+
+function readSavedLang() {
+  try { return localStorage.getItem("lang"); } catch (e) { return null; }
+}
+
+function setLang(l) {
+  lang = l === "en" ? "en" : "pl";
+  ROUNDS = lang === "en" ? ROUNDS_EN : ROUNDS_PL;
+  RULES = lang === "en" ? RULES_EN : RULES_PL;
+  T = TEXT[lang];
+  document.documentElement.lang = lang;
+  document.title = T.title;
+  $("logo").innerHTML = T.logo;
+  $("footnote").textContent = T.footnote;
+  document.querySelectorAll("#lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  try { localStorage.setItem("lang", lang); } catch (e) { /* storage unavailable */ }
+}
+
+document.querySelectorAll("#lang button").forEach((b) => b.addEventListener("click", () => {
+  if (b.dataset.lang === lang) return;
+  setLang(b.dataset.lang);
+  if (view === "end") showEnd(); else showStart();
+}));
+
+function updateStats(bump) {
+  $("progressText").textContent = `${current + 1}/${ROUNDS.length}`;
+  const sp = $("scoreText");
+  sp.innerHTML = `${ICONS.star}<span>${score}</span>`;
+  sp.setAttribute("aria-label", `${T.points}: ${score}`);
+  if (bump) { sp.classList.remove("bump"); void sp.offsetWidth; sp.classList.add("bump"); }
+  $("trail").innerHTML = ROUNDS.map((_, i) => {
+    const res = results[i];
+    if (res) return `<span class="step ${res.fixed === res.total ? "ok" : res.fixed ? "part" : "no"}"></span>`;
+    return `<span class="step${i === current ? " now" : ""}"></span>`;
+  }).join("");
+}
+
+function seriesHTML() {
+  return `<p class="series">${esc(T.series)} <a href="${OTHER_GAME_URL}?lang=${lang}">${esc(T.otherGame)} ${ICONS.arrow}</a></p>`;
+}
+
+/* ---------- Screens ---------- */
+function startGame() { current = 0; score = 0; results = []; showRound(); }
+
+function showStart() {
+  view = "start";
+  setChrome(false);
+  setScreen(`
+    <div class="hero">
+      ${mascot("idle")}
+      <h1>${esc(T.title)}</h1>
+      <div class="bubble">👋 ${esc(T.hello)}</div>
+      <section class="how">
+        <h2>${esc(T.howTitle)}</h2>
+        <ol>
+          ${T.how.map(([t, d], i) => `
+            <li>
+              <span class="num" style="background:${HOW_COLORS[i]}">${i + 1}</span>
+              <div><strong>${esc(t)}</strong><p>${esc(d)}</p></div>
+            </li>`).join("")}
+        </ol>
+      </section>
+      <div class="expect"><strong>${esc(T.expectTitle)}</strong><p>${esc(T.expect)}</p></div>
+      <button class="btn" id="startBtn">${esc(T.start)} ${ICONS.arrow}</button>
+    </div>
+    ${seriesHTML()}`);
+  $("startBtn").onclick = startGame;
+  $("startBtn").focus();
+}
+
+function promptHTML(r) {
+  const added = picked.map((k) => r.cards.find((c) => c.k === k));
+  return `<span class="pline">${esc(r.base)}</span>` +
+    added.map((c) => `<span class="pline add" style="--c:${CATS[c.cat].c}">${esc(c.text)}</span>`).join("");
+}
+
+// The AI's answer for a set of picked cards. Before sending, set is empty and every problem shows in red.
+function answerHTML(r, set, after) {
+  const none = new Set();
+  return r.parts.map((p) => {
+    const text = variant(p, set);
+    const probs = p.probs || [];
+    if (!text) {
+      if (!probs.length) return "";
+      return `<div class="part"><div class="tags">${probs.map((q) => `<span class="tag ok">✓ ${esc(T.removed)}: ${esc(q.label)}</span>`).join("")}</div></div>`;
+    }
+    const tags = probs.map((q) => set.has(q.fix)
+      ? `<span class="tag ok">✓ <s>${esc(q.label)}</s></span>`
+      : `<span class="tag bad">${ICONS.warn} ${esc(q.label)}</span>`).join("");
+    // Green means fixed, so a part that still has a problem stays unhighlighted even if its wording changed.
+    const changed = after && text !== variant(p, none) && probs.every((q) => set.has(q.fix));
+    return `<div class="part${changed ? " changed" : ""}"><span class="ptext">${esc(text)}</span>${tags ? `<div class="tags">${tags}</div>` : ""}</div>`;
+  }).join("");
+}
+
+function showRound() {
+  view = "round";
+  setChrome(true);
+  updateStats();
+  picked = [];
+  sent = false;
+  const r = ROUNDS[current];
+  order = shuffle(r.cards);
+  setScreen(`
+    <div class="guide">
+      ${mascot("think")}
+      <div class="bubble" id="bubble" role="status" aria-live="polite">${esc(T.think)}</div>
+    </div>
+    <span class="round-tag">${esc(T.round)} ${current + 1}</span>
+    <p class="task">${esc(r.task)}</p>
+    <div class="box-label">${ICONS.prompt} ${esc(T.promptLabel)}</div>
+    <div class="prompt" id="prompt">${promptHTML(r)}</div>
+    <div class="box-label">${ICONS.ai} ${esc(T.answerLabel)}</div>
+    <div class="answer" id="answer">${answerHTML(r, new Set(), false)}</div>
+    <div class="box-label" id="addLabel">${ICONS.plus} ${esc(T.addLabel)}</div>
+    <div class="cards" id="cards" role="group" aria-labelledby="addLabel">
+      ${order.map((c) => `
+        <button type="button" class="ing" data-k="${esc(c.k)}" aria-pressed="false">
+          <span class="ing-top">
+            <span class="cat" style="background:${CATS[c.cat].c}">${esc(CATS[c.cat][lang])}</span>
+            <span class="verdict"></span>
+            <span class="check" aria-hidden="true">✓</span>
+          </span>
+          <span class="ing-text">${esc(c.text)}</span>
+        </button>`).join("")}
+    </div>
+    <div class="send-row">
+      <span class="counter" id="counter" aria-live="polite"></span>
+      <button class="btn" id="sendBtn">${esc(T.send)} ${ICONS.arrow}</button>
+    </div>
+    <div id="after"></div>`);
+  screen.querySelectorAll(".ing").forEach((b) => b.addEventListener("click", () => toggle(b.dataset.k)));
+  $("sendBtn").onclick = send;
+  updatePicks();
+  screen.querySelector(".ing").focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function toggle(k) {
+  if (sent) return;
+  const i = picked.indexOf(k);
+  if (i >= 0) picked.splice(i, 1);
+  else if (picked.length < MAX_PICKS) picked.push(k);
+  $("prompt").innerHTML = promptHTML(ROUNDS[current]);
+  updatePicks();
+}
+
+function updatePicks() {
+  const full = picked.length >= MAX_PICKS;
+  screen.querySelectorAll(".ing").forEach((b) => {
+    const on = picked.includes(b.dataset.k);
+    b.setAttribute("aria-pressed", String(on));
+    b.disabled = sent || (full && !on);
+  });
+  $("counter").textContent = T.counter(picked.length, MAX_PICKS);
+  $("sendBtn").disabled = sent || picked.length === 0;
+}
+
+function setBubble(text, cls) {
+  const b = $("bubble");
+  b.textContent = text;
+  b.className = "bubble pop " + (cls || "");
+}
+
+function send() {
+  if (sent || !picked.length) return;
+  sent = true;
+  updatePicks();
+  const r = ROUNDS[current];
+  const set = new Set(picked);
+  const answer = $("answer");
+  setBubble(T.writingBubble);
+  answer.innerHTML = `<span class="typing">${esc(T.writing)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>`;
+  answer.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  setTimeout(() => {
+    const probs = problemsOf(r);
+    const fixed = probs.filter((q) => set.has(q.fix)).length;
+    score += fixed;
+    results.push({ fixed, total: probs.length });
+    updateStats(fixed > 0);
+    answer.innerHTML = answerHTML(r, set, true);
+
+    const mood = fixed === probs.length ? "happy" : fixed ? "idle" : "oops";
+    screen.querySelector(".mascot").dataset.mood = mood;
+    if (fixed === probs.length) setBubble(T.all(fixed), "ok");
+    else if (fixed) setBubble(T.some(fixed, probs.length), "part");
+    else setBubble(T.none, "no");
+
+    // Show which cards mattered: picked and useful, picked but no effect, or useful but not picked.
+    const useful = usefulKeys(r);
+    $("cards").classList.add("revealed");
+    screen.querySelectorAll(".ing").forEach((b) => {
+      const k = b.dataset.k, on = set.has(k), u = useful.has(k);
+      const v = b.querySelector(".verdict");
+      if (on && u) { b.classList.add("v-helped"); v.textContent = T.helped; }
+      else if (on) { b.classList.add("v-none"); v.textContent = T.noEffect; }
+      else if (u) { b.classList.add("v-missing"); v.textContent = T.missing; }
+      else b.classList.add("v-idle");
+    });
+
+    const isLast = current === ROUNDS.length - 1;
+    $("after").innerHTML = `
+      <div class="lesson"><h3>${ICONS.bulb} ${esc(T.lesson)}</h3><p id="lessonText">${esc(r.lesson)}</p></div>
+      <div class="actions"><button class="btn" id="nextBtn" aria-describedby="lessonText">${esc(isLast ? T.result : T.next)} ${ICONS.arrow}</button></div>`;
+    const nextBtn = $("nextBtn");
+    nextBtn.onclick = () => { if (isLast) showEnd(); else { current++; showRound(); } };
+    // The cards and Send were disabled, so focus fell back to the page: hand it to the next step.
+    nextBtn.focus({ preventScroll: true });
+  }, 1100);
+}
+
+function showEnd() {
+  view = "end";
+  setChrome(false);
+  const total = maxStars();
+  const msg = T.msgs[score === total ? 0 : score >= total * 0.75 ? 1 : score >= total / 2 ? 2 : 3];
+  setScreen(`
+    <div class="hero">
+      ${mascot(score >= total / 2 ? "happy" : "think")}
+      <div class="score-blob"><b>${score}/${total}</b><br><span>${esc(T.stars(score))}</span></div>
+      <p class="score-msg">${esc(msg)}</p>
+    </div>
+    <h2>${esc(T.endTitle)}</h2>
+    <ol class="rules">
+      ${RULES.map(([t, d], i) => `
+        <li style="--note:${NOTE_COLORS[i % NOTE_COLORS.length]};--delay:${0.15 + i * 0.12}s">
+          <span class="num">${i + 1}</span><div><strong>${esc(t)}:</strong> ${esc(d)}</div>
+        </li>`).join("")}
+    </ol>
+    <div class="callout less"><span class="ico">${ICONS.stop}</span><div><strong>${esc(T.lessTitle)}</strong>${esc(T.lessText)}</div></div>
+    <div class="callout bonus"><span class="ico">${ICONS.ask}</span><div><strong>${esc(T.bonusTitle)}</strong>${esc(T.bonusText)}</div></div>
+    <div class="end-actions"><button class="btn" id="againBtn">${esc(T.again)} ${ICONS.arrow}</button></div>
+    ${seriesHTML()}`);
+  $("againBtn").onclick = startGame;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+const urlLang = new URLSearchParams(location.search).get("lang");
+setLang(urlLang === "en" || urlLang === "pl" ? urlLang : readSavedLang() || "pl");
+showStart();
+</script>
+</body>
+</html>
