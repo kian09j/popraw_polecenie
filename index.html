@@ -232,6 +232,7 @@
   .expect strong { font-weight: 600; }
   .expect p { margin: 2px 0 0; }
   .series { margin: 26px 0 0; font-size: 14px; color: var(--muted); }
+  .series a { margin-right: 10px; white-space: nowrap; }
 
   .score-blob b { font-size: 44px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
   .score-blob span { color: var(--muted); }
@@ -629,7 +630,7 @@ const TEXT = {
     bonusText: "Napisz na końcu polecenia: „Zanim zaczniesz, zadaj mi pytania”. AI samo zapyta o to, czego mu brakuje.",
     again: "Zagraj jeszcze raz",
     series: "Z tej samej serii:",
-    otherGame: "Myśl jak AI",
+    games: [["Myśl jak AI", "https://kian09j.github.io/mysl_jak_ai/"], ["Czy mogę to wkleić?", "https://kian09j.github.io/czy_moge_to_wkleic/"]],
     footnote: "Odpowiedzi AI są przykładowe, napisane ręcznie, żeby pokazać zasadę działania."
   },
   en: {
@@ -679,12 +680,11 @@ const TEXT = {
     bonusText: "End your prompt with: “Before you start, ask me questions.” The AI will ask for whatever it's missing.",
     again: "Play again",
     series: "Also in this series:",
-    otherGame: "Think like AI",
+    games: [["Think like AI", "https://kian09j.github.io/mysl_jak_ai/"], ["Can I paste this?", "https://kian09j.github.io/czy_moge_to_wkleic/"]],
     footnote: "The AI answers are examples, written by hand to show how it works."
   }
 };
 
-const OTHER_GAME_URL = "https://kian09j.github.io/mysl_jak_ai/";
 const MAX_PICKS = 3;
 const HOW_COLORS = ["#fadec9", "#d3e5ef", "#e8deee"];
 const NOTE_COLORS = ["#fbf3db", "#edf3ec", "#e7f3f8", "#f6f3f9", "#faf1f5"];
@@ -809,7 +809,7 @@ function updateStats(bump) {
 }
 
 function seriesHTML() {
-  return `<p class="series">${esc(T.series)} <a href="${OTHER_GAME_URL}?lang=${lang}">${esc(T.otherGame)} ${ICONS.arrow}</a></p>`;
+  return `<p class="series">${esc(T.series)} ${T.games.map(([name, url]) => `<a href="${url}?lang=${lang}">${esc(name)} ${ICONS.arrow}</a>`).join("")}</p>`;
 }
 
 /* ---------- Screens ---------- */
